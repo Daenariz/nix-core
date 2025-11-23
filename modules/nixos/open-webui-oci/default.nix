@@ -105,7 +105,7 @@ in
       image = "ghcr.io/open-webui/open-webui:main";
       environment = {
         ENABLE_SIGNUP = opt2env cfg.enableSignUp;
-	} // cfg.enviroment;
+	} // cfg.environment;
       volumes = [
         "open-webui_open-webui:/app/backend/data:rw"
       ];
