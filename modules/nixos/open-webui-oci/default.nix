@@ -34,7 +34,7 @@ in
       default = 8080;
       description = "Which port the Open-WebUI server listens to.";
     };
-    envVars = lib.mkOption {
+    environment = lib.mkOption {
       type = types.attrsOf types.str;
       default = {
         ANONYMIZED_TELEMETRY = "False";
@@ -76,9 +76,6 @@ in
   };
 
   config = mkIf cfg.enable {
-    services.open-webui-oci.envVars =
-      cfg.envVars // { ENABLE_SIGNUP = opt2env cfg.enableSignUp;
-      };
     services.nginx.virtualHosts."${fqdn}" = {
       enableACME = cfg.forceSSL;
       forceSSL = cfg.forceSSL;
@@ -106,7 +103,9 @@ in
 
     virtualisation.oci-containers.containers."open-webui" = {
       image = "ghcr.io/open-webui/open-webui:main";
-      environment = cfg.envVars;
+      environment = {
+        ENABLE_SIGNUP = opt2env cfg.enableSignUp;
+	} // cfg.enviroment;
       volumes = [
         "open-webui_open-webui:/app/backend/data:rw"
       ];
