@@ -76,9 +76,9 @@ in
   };
 
   config = mkIf cfg.enable {
-    services.open-webui-oci.envVars = {
-      ENABLE_SIGNUP = opt2env cfg.enableSignUp;
-      } // cfg.envVars;
+    services.open-webui-oci.envVars =
+      cfg.envVars // { ENABLE_SIGNUP = opt2env cfg.enableSignUp;
+      };
     services.nginx.virtualHosts."${fqdn}" = {
       enableACME = cfg.forceSSL;
       forceSSL = cfg.forceSSL;
