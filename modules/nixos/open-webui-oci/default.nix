@@ -34,6 +34,19 @@ in
       default = 8080;
       description = "Which port the Open-WebUI server listens to.";
     };
+    envVars = lib.mkOption {
+      type = types.attrsOf types.str;
+      default = {
+        ANONYMIZED_TELEMETRY = "False";
+        BYPASS_MODEL_ACCESS_CONTROL = "True";
+        DEFAULT_USER_ROLE = "user";
+        DO_NOT_TRACK = "True";
+        SCARF_NO_ANALYTICS = "True";
+	ENABLE_DIRECT_CONNECTIONS = "True";
+        # TODO: More environment variables necessary? Maybe for searx integration? Or should we rely on admin config in the web interface?
+      };
+      description = "Edit your environment variables here.";
+    };
     reverseProxy = mkOption {
       type = types.submodule {
         options = {
@@ -63,6 +76,9 @@ in
   };
 
   config = mkIf cfg.enable {
+    services.open-webui-oci.envVars = {
+      ENABLE_SIGNUP = opt2env cfg.enableSignUp;
+      } // cfg.envVars;
     services.nginx.virtualHosts."${fqdn}" = {
       enableACME = cfg.forceSSL;
       forceSSL = cfg.forceSSL;
@@ -90,15 +106,7 @@ in
 
     virtualisation.oci-containers.containers."open-webui" = {
       image = "ghcr.io/open-webui/open-webui:main";
-      environment = {
-        "ANONYMIZED_TELEMETRY" = mkDefault "False";
-        "BYPASS_MODEL_ACCESS_CONTROL" = mkDefault "True";
-        "DEFAULT_USER_ROLE" = mkDefault "user";
-        "DO_NOT_TRACK" = mkDefault "True";
-        "ENABLE_SIGNUP" = opt2env cfg.enableSignUp;
-        "SCARF_NO_ANALYTICS" = mkDefault "True";
-        # TODO: More environment variables necessary? Maybe for searx integration? Or should we rely on admin config in the web interface?
-      };
+      environment = cfg.envVars;
       volumes = [
         "open-webui_open-webui:/app/backend/data:rw"
       ];
@@ -112,6 +120,7 @@ in
         "--network=open-webui_default"
       ];
     };
+
     systemd.services."podman-open-webui" = {
       serviceConfig = {
         Restart = lib.mkOverride 90 "always";
